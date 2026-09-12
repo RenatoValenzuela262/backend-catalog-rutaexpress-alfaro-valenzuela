@@ -1,0 +1,40 @@
+services:
+
+  rutaexpress-postgres:
+    image: postgres:16-alpine
+    container_name: rutaexpress-postgres
+    environment:
+      POSTGRES_DB: rutaexpress
+      POSTGRES_USER: rutaexpress
+      POSTGRES_PASSWORD: rutaexpress
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rutaexpress -d rutaexpress"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  rutaexpress-catalog:
+    build: .
+    container_name: rutaexpress-catalog
+    depends_on:
+      rutaexpress-postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://rutaexpress-postgres:5432/rutaexpress
+      DB_USER: rutaexpress
+      DB_PASSWORD: rutaexpress
+      DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
