@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/rutaexpress}
+    username: ${DB_USER:rutaexpress}
+    password: ${DB_PASSWORD:rutaexpress}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+
+logging:
+  level:
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:info}

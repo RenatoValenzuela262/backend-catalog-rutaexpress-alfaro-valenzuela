@@ -1,0 +1,314 @@
+{
+  "info": {
+    "name": "ms-rutaexpress-catalog",
+    "description": "Collection para probar ms-rutaexpress-catalog. Base URL por defecto: http://localhost:8080 (stack docker compose). Variable serviceId: usar el id del servicio a consultar (cambia segun el id devuelto por el POST).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "serviceId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health (Actuator)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["actuator", "health"]
+        }
+      }
+    },
+    {
+      "name": "Crear servicio",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"availableCapacity == totalCapacity\", () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.availableCapacity).to.eql(body.totalCapacity);",
+              "  pm.environment.set(\"serviceId\", String(body.id));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"EXPRESS_2H\",\n  \"name\": \"Entrega 2 horas\",\n  \"description\": \"Urgente\",\n  \"tariff\": 250.00,\n  \"totalCapacity\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services"]
+        }
+      }
+    },
+    {
+      "name": "Listar servicios (paginado)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Tiene page y content\", () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property(\"content\");",
+              "  pm.expect(body).to.have.property(\"totalElements\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services?active=true&page=0&size=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services"],
+          "query": [
+            {
+              "key": "active",
+              "value": "true"
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener servicio por id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services/:serviceId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services", ":serviceId"],
+          "variable": [
+            {
+              "key": "serviceId",
+              "value": "{{serviceId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Actualizar servicio",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Entrega 2 horas PREMIUM\",\n  \"description\": \"Cambio de tarifa\",\n  \"tariff\": 300.00,\n  \"totalCapacity\": 20\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services/:serviceId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services", ":serviceId"],
+          "variable": [
+            {
+              "key": "serviceId",
+              "value": "{{serviceId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Disminuir capacidad (envio aceptado)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services/:serviceId/capacity/decrease",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services", ":serviceId", "capacity", "decrease"],
+          "variable": [
+            {
+              "key": "serviceId",
+              "value": "{{serviceId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reponer capacidad (envio cancelado)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services/:serviceId/capacity/increase",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services", ":serviceId", "capacity", "increase"],
+          "variable": [
+            {
+              "key": "serviceId",
+              "value": "{{serviceId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Eliminar servicio (soft delete)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalog/services/:serviceId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "catalog", "services", ":serviceId"],
+          "variable": [
+            {
+              "key": "serviceId",
+              "value": "{{serviceId}}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
